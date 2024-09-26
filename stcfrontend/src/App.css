@@ -30,25 +30,55 @@ button:hover {
   background-color: #45a049;
 }
 
-.timetable {
-  margin: 30px auto;
-  width: 80%;
+
+
+.timetable-container {
+  margin: 20px;
 }
 
-table {
+.timetable-heading {
+  text-align: center;
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.division-container {
+  margin-bottom: 30px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 10px;
+  background-color: #f9f9f9;
+}
+
+.division-heading {
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+.table-heading {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.timetable-table {
   width: 100%;
   border-collapse: collapse;
+  margin-bottom: 20px;
 }
 
-table, th, td {
-  border: 1px solid black;
+.table-header {
+  background-color: #007bff;
+  color: white;
+  padding: 10px;
 }
 
-th, td {
-  padding: 12px;
+.table-cell {
+  border: 1px solid #ddd;
+  padding: 10px;
   text-align: left;
 }
 
-th {
-  background-color: #f2f2f2;
+.table-cell div {
+  margin: 5px 0;
 }
+

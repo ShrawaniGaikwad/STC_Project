@@ -17,87 +17,104 @@ def generate_timetable(divisions, batches, theory_rooms, lab_rooms, teachers, su
     for division in range(1, divisions + 1):
         timetable = {"theory": {}, "practical": {}}
         
-    #     for day in days:
-    #         day_schedule = []
-    #         current_time = start_time
+        for day in days:
+            day_schedule = []
+            current_time = start_time
             
-    #         assigned_rooms = set()  # Reset for each day
-    #         assigned_teachers = set()  # Reset for each day
+            assigned_rooms = set()  # Reset for each day
+            assigned_teachers = set()  # Reset for each day
             
-    #         # Generate theory sessions for the division
-    #         while current_time < end_time:
-    #             if len(subjects) == 0:
-    #                 break
-    #             subject = random.choice(subjects)
-    #             teacher = random.choice(teachers)
-    #             room = random.choice(theory_rooms)
+            while current_time < end_time:
+    # If there are no subjects, break the loop
+                if len(subjects) == 0:
+                    break
 
-    #             # Ensure no conflicts in theory sessions
-    #             if teacher in assigned_teachers or room in assigned_rooms:
-    #                 continue  # Skip this iteration if conflict found
+                # Select a random subject
+                subject = random.choice(subjects)
 
-    #             assigned_teachers.add(teacher)
-    #             assigned_rooms.add(room)
+                # Track if a valid schedule was found
+                session_scheduled = False
 
-    #             day_schedule.append({
-    #                 "subject": subject,
-    #                 "teacher": teacher,
-    #                 "room": room,
-    #                 "time": f"{current_time}:00 - {current_time + lec_duration}:00"
-    #             })
+                for _ in range(len(teachers) * len(theory_rooms)):  # Try multiple combinations
+                    teacher = random.choice(teachers)
+                    room = random.choice(theory_rooms)
 
-    #             current_time += lec_duration  # Increment time
-    #             if current_time >= end_time:
-    #                 break
+                    # Ensure no conflicts in theory sessions
+                    if teacher in assigned_teachers or room in assigned_rooms:
+                        continue  # Skip this iteration if conflict found
 
-    #             # Debug iteration count
-    #             iteration_count += 1
-    #             if iteration_count > max_iterations:
-    #                 print("Breaking out of the loop for debugging")
-    #                 break
+                    # If there's no conflict, assign the teacher and room
+                    assigned_teachers.add(teacher)
+                    assigned_rooms.add(room)
+
+                    day_schedule.append({
+                        "subject": subject,
+                        "teacher": teacher,
+                        "room": room,
+                        "time": f"{current_time}:00 - {current_time + lec_duration}:00"
+                    })
+
+                    current_time += lec_duration  # Increment time
+                    session_scheduled = True  # Mark that a session was successfully scheduled
+                    print(f"Assigned: {subject}, {teacher}, Room: {room}, Time: {current_time - lec_duration}:00 - {current_time}:00")
+                    
+                    # Check if current time has reached or exceeded end time
+                    if current_time >= end_time:
+                        break  # End of the day, stop lab sessions
+
+                # If no valid session was scheduled after trying all combinations
+                if not session_scheduled:
+                    print(f"No valid session could be scheduled for {subject}. Ending session generation.")
+                    break
+
+                # Increment iteration count
+                iteration_count += 1
+                if iteration_count > max_iterations:
+                    print("Breaking out of the loop for debugging")
+                    break
             
-    #         # Assign theory schedule for the day
-    #         timetable["theory"][day] = day_schedule
+            # Assign theory schedule for the day
+            timetable["theory"][day] = day_schedule
 
-    #         # Generate practical sessions divided by batches for each division
-    #         batch_schedule = []
-    #         for batch in batches:
-    #             lab_schedule = []
-    #             current_time = start_time
-    #             assigned_rooms = set()  # Reset for each batch
-    #             assigned_teachers = set()  # Reset for each batch
+            # Generate practical sessions divided by batches for each division
+            batch_schedule = []
+            for batch in batches:
+                lab_schedule = []
+                current_time = start_time
+                assigned_rooms = set()  # Reset for each batch
+                assigned_teachers = set()  # Reset for each batch
 
-    #             for practical_subject in practical_subjects:
-    #                 lab_teacher = random.choice(teachers)
-    #                 lab_room = random.choice(lab_rooms)
+                for practical_subject in practical_subjects:
+                    lab_teacher = random.choice(teachers)
+                    lab_room = random.choice(lab_rooms)
 
-    #                 # Ensure no conflicts in practical sessions (teacher and lab room)
-    #                 if lab_teacher in assigned_teachers or lab_room in assigned_rooms:
-    #                     continue  # Skip this iteration if conflict found
+                    # Ensure no conflicts in practical sessions (teacher and lab room)
+                    if lab_teacher in assigned_teachers or lab_room in assigned_rooms:
+                        continue  # Skip this iteration if conflict found
                         
-    #                 assigned_teachers.add(lab_teacher)
-    #                 assigned_rooms.add(lab_room)
+                    assigned_teachers.add(lab_teacher)
+                    assigned_rooms.add(lab_room)
 
-    #                 lab_schedule.append({
-    #                     "subject": practical_subject,
-    #                     "teacher": lab_teacher,
-    #                     "room": lab_room,
-    #                     "time": f"{current_time}:00 - {current_time + lab_duration}:00"
-    #                 })
+                    lab_schedule.append({
+                        "subject": practical_subject,
+                        "teacher": lab_teacher,
+                        "room": lab_room,
+                        "time": f"{current_time}:00 - {current_time + lab_duration}:00"
+                    })
 
-    #                 current_time += lab_duration  # Increment time
-    #                 if current_time >= end_time:
-    #                     break  # End of the day, stop lab sessions
+                    current_time += lab_duration  # Increment time
+                    if current_time >= end_time:
+                        break  # End of the day, stop lab sessions
 
-    #                 # Debug iteration count
-    #                 iteration_count += 1
-    #                 if iteration_count > max_iterations:
-    #                     print("Breaking out of the loop for debugging")
-    #                     break
+                    # Debug iteration count
+                    iteration_count += 1
+                    if iteration_count > max_iterations:
+                        print("Breaking out of the loop for debugging")
+                        break
 
-    #             batch_schedule.append({batch: lab_schedule})
+                batch_schedule.append({batch: lab_schedule})
             
-            # timetable["practical"][day] = batch_schedule
+            timetable["practical"][day] = batch_schedule
         
         generated_timetables[f"Division-{division}"] = timetable
     
