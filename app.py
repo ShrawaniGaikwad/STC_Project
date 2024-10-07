@@ -55,6 +55,8 @@ def generate_random_timetable(batches, subjects, labs, theory_rooms, lab_rooms, 
     timetable = {slot['slot']: {day: [] for day in days} for slot in unified_time_slots}
 
     for day in days:
+        scheduled_labs = set()  # Track labs that have been scheduled for the day
+
         # Assign lectures and labs based on unified time slots
         for slot_info in unified_time_slots:
             slot_type = slot_info['type']
@@ -82,31 +84,42 @@ def generate_random_timetable(batches, subjects, labs, theory_rooms, lab_rooms, 
                 
                 for room in range(1, lab_rooms + 1):
                     if remaining_batches:
-                        # Assign lab to as many batches as we have rooms available
                         for batch in remaining_batches:
                             if not remaining_batches:
                                 break
 
-                            subject = random.choice(list(labs.keys()))
-                            teacher = labs[subject]
-                            assigned_room = f"A2-{room}"  # Lab room
+                            # If all labs have been scheduled, start rotating through the labs again
+                            if len(scheduled_labs) == len(labs):
+                                scheduled_labs.clear()  # Clear the set to allow reassigning labs
 
-                            # Check if the room is free in the timetable slot
-                            if not any(class_info['room'] == assigned_room for class_info in timetable[slot][day]):
-                                timetable[slot][day].append({
-                                    "subject": subject,
-                                    "teacher": teacher,
-                                    "room": assigned_room,
-                                    "batch": batch,
-                                    "time": slot,  # Use the string time slot directly
-                                    "type": slot_type
-                                })
-                                remaining_batches.remove(batch)  # Batch is assigned, remove from list
-                                
+                            # Select a lab subject that hasn't been scheduled yet for this round
+                            available_labs = [lab for lab in labs.keys() if lab not in scheduled_labs]
+                            
+                            if available_labs:
+                                subject = random.choice(available_labs)
+                                teacher = labs[subject]
+                                assigned_room = f"A2-{room}"  # Lab room
+
+                                # Check if the room is free in the timetable slot
+                                if not any(class_info['room'] == assigned_room for class_info in timetable[slot][day]):
+                                    timetable[slot][day].append({
+                                        "subject": subject,
+                                        "teacher": teacher,
+                                        "room": assigned_room,
+                                        "batch": batch,
+                                        "time": slot,  # Use the string time slot directly
+                                        "type": slot_type
+                                    })
+
+                                    scheduled_labs.add(subject)  # Mark this lab as scheduled for the round
+                                    remaining_batches.remove(batch)  # Batch is assigned, remove from list
+                                    
                             if not remaining_batches:
                                 break
 
     return timetable
+
+
 
 
 # Flask API Endpoints

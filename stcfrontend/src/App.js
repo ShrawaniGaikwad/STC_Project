@@ -5,7 +5,7 @@ import './App.css';
 function App() {
   const [batches, setBatches] = useState(['K4', 'L4', 'M4', 'N4']);
   const [theoryRooms, setTheoryRooms] = useState(3);
-  const [labRooms, setLabRooms] = useState(2);
+  const [labRooms, setLabRooms] = useState(4);
   const [totalFaculty, setTotalFaculty] = useState(5);
   const [subjects, setSubjects] = useState([{ subject: 'CNS', teacher: 'mr. xyz' },{ subject: 'SPOS', teacher: 'mr. abc' },{ subject: 'DBMS', teacher: 'mr. hfb'},{ subject: 'HCI', teacher: 'mr. yrb'},{ subject: 'TOC', teacher: 'mr. apn'}]);
   const [labSubjects, setLabSubjects] = useState([{ subject: 'CNS Lab', teacher: 'hdc' },{ subject: 'LP Lab', teacher: 'ydbd' },{ subject: 'DBMS Lab', teacher: 'tdbjc' }]);
