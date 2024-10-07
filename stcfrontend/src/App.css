@@ -4,32 +4,6 @@
   margin: 20px;
 }
 
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: 20px auto;
-  max-width: 300px;
-}
-
-input, select {
-  padding: 8px;
-  font-size: 14px;
-}
-
-button {
-  padding: 10px;
-  font-size: 16px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #45a049;
-}
-
 
 
 .timetable-container {
@@ -55,7 +29,7 @@ button:hover {
   margin-bottom: 10px;
 }
 
-.table-heading {
+/* .table-heading {
   font-size: 18px;
   margin-bottom: 10px;
 }
@@ -80,5 +54,15 @@ button:hover {
 
 .table-cell div {
   margin: 5px 0;
+} */
+th{
+  border: 2px solid #333; /* Darker border color */
+  padding: 10px; /* Optional: Add some padding */
+  text-align: left; 
+}
+td {
+  border: 2px solid #333; /* Darker border color */
+  padding: 10px; /* Optional: Add some padding */
+  text-align: left; /* Align text to the left */
 }
 
