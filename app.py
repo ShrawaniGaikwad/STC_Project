@@ -3,81 +3,111 @@ import random
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app)
 
-# Utility Functions
-def generate_time_slots(start, end, duration):
-    """Generate time slots based on start time (in hours), end time (in hours),
-    and duration (in minutes).
-    """
-    time_slots = []
+
+def generate_unified_time_slots(start, end, lec_duration, lab_duration):
+    """Generate a unified time slot list for lectures and labs without exceeding the end time."""
+    slots = []
     current_time = start * 60  # Convert start time to minutes
     end_time = end * 60  # Convert end time to minutes
 
-    while current_time + duration <= end_time:  # Ensure the time doesn't exceed the end
+    while current_time + lec_duration <= end_time:
         start_hour = current_time // 60
         start_minute = current_time % 60
-        end_time_slot = current_time + duration
-        end_hour = end_time_slot // 60
-        end_minute = end_time_slot % 60
+        end_lec_minute = current_time + lec_duration
 
-        # Format time slots as "HH:MM-HH:MM"
-        time_slot = f"{start_hour:02d}:{start_minute:02d}-{end_hour:02d}:{end_minute:02d}"
-        time_slots.append(time_slot)
-        current_time += duration  # Move to the next slot
+        lec_end_hour = end_lec_minute // 60
+        lec_end_minute = end_lec_minute % 60
 
-    return time_slots
-def assign_room(room_type, total_rooms):
-    """Assign a room based on type and total available rooms."""
-    room_number = random.randint(1, total_rooms)
-    return f"{room_type}-{room_number + 300}"  # Example: A1-301
+        # Lecture time slot as string "start-end"
+        lec_time_slot = f"{start_hour:02}:{start_minute:02}-{lec_end_hour:02}:{lec_end_minute:02}"
+        slots.append({"type": "lecture", "slot": lec_time_slot})
 
-def generate_random_timetable(batches, subjects, labs, theory_rooms, lab_rooms, college_start, college_end, lecture_duration, lab_duration, days):
+        current_time += lec_duration  # Move to next lecture slot
+
+        if current_time + lab_duration <= end_time:
+            # Lab time slot as string "start-end"
+            end_lab_minute = current_time + lab_duration
+            lab_end_hour = end_lab_minute // 60
+            lab_end_minute = end_lab_minute % 60
+
+            lab_time_slot = f"{start_hour:02}:{start_minute:02}-{lab_end_hour:02}:{lab_end_minute:02}"
+            slots.append({"type": "lab", "slot": lab_time_slot})
+
+            current_time += lab_duration  # Move to next lab slot
+
+    return slots
+
+
+def assign_room(prefix, room_count):
+    """Assign a room based on a prefix and room count."""
+    return f"{prefix}-{random.randint(1, room_count)}"
+
+def generate_random_timetable(batches, subjects, labs, theory_rooms, lab_rooms, college_start, college_end, lec_duration, lab_duration, days):
     """Generates a random timetable for each batch based on the provided inputs."""
-    lecture_time_slots = generate_time_slots(college_start, college_end, lecture_duration)
-    lab_time_slots = generate_time_slots(college_start, college_end, lab_duration)
+    unified_time_slots = generate_unified_time_slots(college_start, college_end, lec_duration, lab_duration)
 
-    if not lecture_time_slots or not lab_time_slots:
+    if not unified_time_slots:
         raise ValueError("No valid time slots generated.")
 
-    timetable = {slot: {day: [] for day in days} for slot in lecture_time_slots + lab_time_slots}
-    
+    # Initialize timetable with string keys for time slots
+    timetable = {slot['slot']: {day: [] for day in days} for slot in unified_time_slots}
+
     for day in days:
-        assigned_subjects = set()  
-        for slot in lecture_time_slots:
-            subject = random.choice(list(subjects.keys()))
-            if subject in assigned_subjects: 
-                continue
-            assigned_subjects.add(subject)
-            teacher = subjects[subject]
-            room = assign_room("A1", theory_rooms)  
-            timetable[slot][day].append({
-                "subject": subject,
-                "teacher": teacher,
-                "room": room,
-                "batch": "All"
-            })
+        # Assign lectures and labs based on unified time slots
+        for slot_info in unified_time_slots:
+            slot_type = slot_info['type']
+            slot = slot_info['slot']
 
-    for batch in batches:
-        for day in days:
-            available_lab_slots = random.sample(lab_time_slots, len(lab_time_slots))
-            for lab_slot in available_lab_slots:
-                subject = random.choice(list(labs.keys()))
-                teacher = labs[subject]
-                room = assign_room("A2", lab_rooms) 
-
-                if lab_slot in timetable and all(
-                    not (class_info['teacher'] == teacher or class_info['room'] == room) 
-                    for class_info in timetable[lab_slot][day]
-                ):
-                    timetable[lab_slot][day].append({
+            if slot_type == 'lecture':
+                # Lectures are common to all batches
+                subject = random.choice(list(subjects.keys()))
+                teacher = subjects[subject]
+                room = assign_room("A1", theory_rooms)
+                
+                # Only one lecture per time slot for all batches
+                if not timetable[slot][day]:
+                    timetable[slot][day].append({
                         "subject": subject,
                         "teacher": teacher,
                         "room": room,
-                        "batch": batch
+                        "batches": batches,  # Assign all batches to the same lecture
+                        "time": slot,  # Use the string time slot directly
+                        "type": slot_type
                     })
+            else:
+                # Labs are per batch, ensure all batches are assigned labs
+                remaining_batches = list(batches)  # Keep track of batches that still need a lab assignment
+                
+                for room in range(1, lab_rooms + 1):
+                    if remaining_batches:
+                        # Assign lab to as many batches as we have rooms available
+                        for batch in remaining_batches:
+                            if not remaining_batches:
+                                break
+
+                            subject = random.choice(list(labs.keys()))
+                            teacher = labs[subject]
+                            assigned_room = f"A2-{room}"  # Lab room
+
+                            # Check if the room is free in the timetable slot
+                            if not any(class_info['room'] == assigned_room for class_info in timetable[slot][day]):
+                                timetable[slot][day].append({
+                                    "subject": subject,
+                                    "teacher": teacher,
+                                    "room": assigned_room,
+                                    "batch": batch,
+                                    "time": slot,  # Use the string time slot directly
+                                    "type": slot_type
+                                })
+                                remaining_batches.remove(batch)  # Batch is assigned, remove from list
+                                
+                            if not remaining_batches:
+                                break
 
     return timetable
+
 
 # Flask API Endpoints
 @app.route('/generate_timetable', methods=['POST'])
@@ -113,8 +143,13 @@ def generate_timetable():
 
         # Generate the timetable using the random generation function
         timetable = generate_random_timetable(batches, subject_dict, lab_subject_dict, theory_rooms, lab_rooms, start_time, end_time, lec_duration, lab_duration, days)
-        
+
+        print(timetable)
         return jsonify(timetable), 200
+    except KeyError as ke:
+        return jsonify({"error": f"Missing key: {str(ke)}"}), 400
+    except ValueError as ve:
+        return jsonify({"error": str(ve)}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

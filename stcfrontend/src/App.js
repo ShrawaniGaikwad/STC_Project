@@ -8,7 +8,7 @@ function App() {
   const [labRooms, setLabRooms] = useState(2);
   const [totalFaculty, setTotalFaculty] = useState(5);
   const [subjects, setSubjects] = useState([{ subject: 'CNS', teacher: 'mr. xyz' },{ subject: 'SPOS', teacher: 'mr. abc' },{ subject: 'DBMS', teacher: 'mr. hfb'},{ subject: 'HCI', teacher: 'mr. yrb'},{ subject: 'TOC', teacher: 'mr. apn'}]);
-  const [labSubjects, setLabSubjects] = useState([{ subject: 'CNS LAb', teacher: 'hdc' },{ subject: 'LP Lab', teacher: 'ydbd' },{ subject: 'DBMS Lab', teacher: 'tdbjc' }]);
+  const [labSubjects, setLabSubjects] = useState([{ subject: 'CNS Lab', teacher: 'hdc' },{ subject: 'LP Lab', teacher: 'ydbd' },{ subject: 'DBMS Lab', teacher: 'tdbjc' }]);
   const [startTime, setStartTime] = useState(9); // 9 AM
   const [endTime, setEndTime] = useState(17); // 5 PM
   const [lecDuration, setLecDuration] = useState(60);
