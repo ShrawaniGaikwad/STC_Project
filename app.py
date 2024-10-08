@@ -5,14 +5,19 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-
-def generate_unified_time_slots(start, end, lec_duration, lab_duration):
-    """Generate a unified time slot list for lectures and labs without exceeding the end time."""
+def generate_unified_time_slots(start, end, lec_duration, lab_duration, lunch_break):
+    """Generate a unified time slot list for lectures and labs without exceeding the end time and respecting lunch breaks."""
     slots = []
     current_time = start * 60  # Convert start time to minutes
     end_time = end * 60  # Convert end time to minutes
+    lunch_start = lunch_break['start'] * 60  # Convert lunch start to minutes
+    lunch_end = lunch_break['end'] * 60  # Convert lunch end to minutes
 
     while current_time + lec_duration <= end_time:
+        # Check if the current time is during lunch break
+        if lunch_start <= current_time < lunch_end:
+            current_time = lunch_end  # Skip lunch break
+        
         start_hour = current_time // 60
         start_minute = current_time % 60
         end_lec_minute = current_time + lec_duration
@@ -27,6 +32,10 @@ def generate_unified_time_slots(start, end, lec_duration, lab_duration):
         current_time += lec_duration  # Move to next lecture slot
 
         if current_time + lab_duration <= end_time:
+            # Check if the current time is during lunch break
+            if lunch_start <= current_time < lunch_end:
+                current_time = lunch_end  # Skip lunch break
+            
             # Lab time slot as string "start-end"
             end_lab_minute = current_time + lab_duration
             lab_end_hour = end_lab_minute // 60
@@ -39,14 +48,13 @@ def generate_unified_time_slots(start, end, lec_duration, lab_duration):
 
     return slots
 
-
 def assign_room(prefix, room_count):
     """Assign a room based on a prefix and room count."""
     return f"{prefix}-{random.randint(1, room_count)}"
 
-def generate_random_timetable(batches, subjects, labs, theory_rooms, lab_rooms, college_start, college_end, lec_duration, lab_duration, days):
+def generate_random_timetable(batches, subjects, labs, theory_rooms, lab_rooms, college_start, college_end, lec_duration, lab_duration, days, lunch_break):
     """Generates a random timetable for each batch based on the provided inputs."""
-    unified_time_slots = generate_unified_time_slots(college_start, college_end, lec_duration, lab_duration)
+    unified_time_slots = generate_unified_time_slots(college_start, college_end, lec_duration, lab_duration, lunch_break)
 
     if not unified_time_slots:
         raise ValueError("No valid time slots generated.")
@@ -119,9 +127,6 @@ def generate_random_timetable(batches, subjects, labs, theory_rooms, lab_rooms, 
 
     return timetable
 
-
-
-
 # Flask API Endpoints
 @app.route('/generate_timetable', methods=['POST'])
 def generate_timetable():
@@ -149,13 +154,14 @@ def generate_timetable():
         lec_duration = int(data['lec_duration']) 
         lab_duration = int(data['lab_duration']) 
         days = data['days']
+        lunch_break = data.get('lunch_break', {'start': 12, 'end': 13})
 
         # Convert subjects and lab_subjects lists to dictionaries
         subject_dict = {sub['subject']: sub['teacher'] for sub in subjects}
         lab_subject_dict = {lab['subject']: lab['teacher'] for lab in lab_subjects}
 
         # Generate the timetable using the random generation function
-        timetable = generate_random_timetable(batches, subject_dict, lab_subject_dict, theory_rooms, lab_rooms, start_time, end_time, lec_duration, lab_duration, days)
+        timetable = generate_random_timetable(batches, subject_dict, lab_subject_dict, theory_rooms, lab_rooms, start_time, end_time, lec_duration, lab_duration, days, lunch_break)
 
         print(timetable)
         return jsonify(timetable), 200
