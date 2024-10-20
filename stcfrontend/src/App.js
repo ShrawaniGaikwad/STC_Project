@@ -547,38 +547,44 @@ function App() {
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
-  {Object.keys(timetable).length > 0 && (
-    <table className="table table-bordered">
-      <thead>
-        <tr>
-          <th style={{backgroundColor:'gray'}}>Time</th>
-          {days.map((day) => (
-            <th key={day} style={{backgroundColor:'gray'}}>{day}</th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {Object.entries(timetable).map(([timeSlot, entries]) => (
-          <tr key={timeSlot}>
-            <td >{timeSlot}</td>
-            {days.map((day) => {
-              const lessons = entries[day] || []; // Access lessons for each day
-              return (
-                <td key={day}>
-                  {lessons.map((entry, index) => (
-                    <div key={index}>
-                      <strong>{entry.subject}</strong> ({entry.teacher}) - {entry.room}<br />
-                      <small>{entry.batch}</small>
-                    </div>
-                  ))}
-                </td>
-              );
-            })}
-          </tr>
+      {Object.keys(timetable).length > 0 && (
+  <table className="table table-bordered">
+    <thead>
+      <tr>
+        <th style={{backgroundColor:'gray'}}>Time</th>
+        {days.map((day) => (
+          <th key={day} style={{backgroundColor:'gray'}}>{day}</th>
         ))}
-      </tbody>
-    </table>
-  )}
+      </tr>
+    </thead>
+    <tbody>
+      {Object.entries(timetable).map(([timeSlot, entries]) => (
+        <tr key={timeSlot}>
+          <td>{timeSlot}</td>
+          {days.map((day) => {
+            const lessons = entries[day] || []; // Access lessons for each day
+            return (
+              <td key={day}>
+                {lessons.map((entry, index) => (
+                  <div key={index}>
+                    {entry.subject === "Break" ? (
+                      <span style={{ color: 'red' }}>Break</span>
+                    ) : (
+                      <>
+                        <strong>{entry.subject}</strong> ({entry.teacher}) - {entry.room}<br />
+                        <small>{entry.batch}</small>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </td>
+            );
+          })}
+        </tr>
+      ))}
+    </tbody>
+  </table>
+)}
     </div>
   );
 }
