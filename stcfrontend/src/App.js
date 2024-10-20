@@ -567,7 +567,7 @@ function App() {
               <td key={day}>
                 {lessons.map((entry, index) => (
                   <div key={index}>
-                    {entry.subject === "Break" ? (
+                    {entry.slot_type === "lunch_break" ? (
                       <span style={{ color: 'red' }}>Break</span>
                     ) : (
                       <>
