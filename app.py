@@ -75,6 +75,9 @@ def generate_random_timetable(batches, subjects, labs, theory_rooms, lab_rooms, 
     # Track lecture count for each subject per day to ensure no subject is scheduled more than twice
     daily_lecture_count = {day: {subject: 0 for subject in subjects.keys()} for day in days}
 
+    # Track labs scheduled for each batch to avoid scheduling the same lab more than once per day
+    daily_lab_schedule = {day: {batch: [] for batch in batches} for day in days}
+
     for day in days:
         daily_lab_count = {lab: 0 for lab in labs.keys()}  # Track labs scheduled for the day
 
@@ -109,12 +112,12 @@ def generate_random_timetable(batches, subjects, labs, theory_rooms, lab_rooms, 
 
                 # Schedule the same lab for all batches, but each batch gets a different room
                 for lab, details in labs.items():
-                    if daily_lab_count[lab] < 2:  # Max 2 labs per day
+                    if daily_lab_count[lab] < 1:  # Ensure a lab is scheduled only once per day
                         # Assign different rooms for each batch
                         for i, batch in enumerate(batches):
-                            if weekly_lab_count[batch][lab] < details['frequency']:
+                            if weekly_lab_count[batch][lab] < details['frequency'] and lab not in daily_lab_schedule[day][batch]:
                                 room = f"A2-{(i % lab_rooms) + 1}"  # Assign a different room to each batch
-                                
+
                                 timetable[slot][day].append({
                                     "subject": lab,
                                     "teacher": details['teacher'],
@@ -126,10 +129,12 @@ def generate_random_timetable(batches, subjects, labs, theory_rooms, lab_rooms, 
                                 weekly_lab_count[batch][lab] += 1
                                 lab_scheduled = True
 
+                                # Mark the lab as scheduled for this batch on this day
+                                daily_lab_schedule[day][batch].append(lab)
+
                         if lab_scheduled:
                             daily_lab_count[lab] += 1
                             break
-            
 
                 # If no lab was scheduled, assign a lecture in that slot
                 if not lab_scheduled:
@@ -158,10 +163,9 @@ def generate_random_timetable(batches, subjects, labs, theory_rooms, lab_rooms, 
                     "slot_type": "lunch_break",  # Use the same key as in your React component
                     "slot": slot  # You can include slot time or any other details if needed
                 })
-                
-        
 
     return timetable
+
 
 
 # Flask API Endpoints
